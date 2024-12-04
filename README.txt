@@ -1,5 +1,6 @@
 Installation 
 1. Git clone https://github.com/Produderox/DTP
+Do all these below in vsc terminal 
 2. pip install -r requirements.txt
 3. python server.py
 
