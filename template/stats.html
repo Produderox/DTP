@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h3 style="margin-top: 8vh;">View crop, water, and rainfall data by country.</h2>
+    <form action="/results" method="POST" id="data-form">
+        <label>Choose a country:</label>
+        <select id="dropdown" name="dropdown">
+            {% for country in countries %}
+                <option value="{{ country }}">{{ country }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Submit</button>
+    </form>
+
+
+{% endblock %}

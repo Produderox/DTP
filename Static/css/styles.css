@@ -1,0 +1,34 @@
+.carousel-item img {
+    width: 100vw; 
+    height: calc(100vh - 15vh); 
+    object-fit: cover; 
+}
+
+#worldText,#GFSIText{
+    text-align: center;
+}
+
+#GFSIText{
+    margin-top: -10%;
+    margin-bottom: 3%;
+}
+
+.GFSI,th,td{
+    border: 1px solid;
+}
+
+.darker-red-cell {
+    background-color: rgb(255, 0, 0);
+}
+.dark-cell {
+    background-color: rgb(205, 2, 2);
+}
+.red-cell {
+    background-color: rgb(252, 78, 78);
+}
+.lightred-cell {
+    background-color: rgb(250, 177, 177);
+}
+.white-cell{
+    background-color: white;
+}

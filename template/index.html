@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Bootstrap Carousel -->
+<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="6000">
+    <div class="carousel-inner">
+        {% for image in images[:3] %} <!-- Limit carousel to the first 3 images -->
+        <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+            <img class="d-block w-100" src="{{ image }}" alt="Slide {{ loop.index }}">
+        </div>
+        {% endfor %}
+    </div>
+    <a class="carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    </a>
+    <a class="carousel-control-next" href="#myCarousel" role="button" data-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    </a>
+</div>
+
+<br/>
+
+<!-- World Map Chart -->
+<h5 id="worldText" style="margin-top: 5%;">World mapchart showing 
+    <a style="color:rgb(83, 155, 179);text-decoration: none;" href="https://data.worldbank.org/indicator/AG.LND.AGRI.ZS">agricultural land percentage</a> in 2021
+</h5>
+
+<!-- Legend below the text -->
+<div style="height: 50px;">
+    <img src="{{ url_for('static', filename='Image/Legend.jpg') }}" alt="Legend" style=" display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2%;">
+</div>
+
+<!-- Map -->
+<div id="Map" style="margin-top:-10%"></div> <!-- React component rendered here -->
+<script src="{{ url_for('static', filename='js/Index.js') }}"></script>
+
+<!-- Global Food Security Index Table -->
+<h3 id="GFSIText">Global Food Security Index Rankings. Learn more about it 
+    <a style="color:rgb(83, 155, 179);text-decoration: none;" href="https://impact.economist.com/sustainability/project/food-security-index/">here</a>
+</h3>
+<div class="container" style="margin: 100px,15%,20%,15%;width: 70%;">
+    <table class="GFSI" border="1" style="text-align:center; display: block; height: 75vh; overflow:auto;">
+        <thead>
+            <tr>
+                {% for key in data[0].keys() %}
+                <td style="position: sticky; top: 0; background-color: darkgray; border-bottom: 1px solid;">{{ key }}</td>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                {% for value in row.values() %}
+                <td class="
+                {% if loop.index > 2 %} 
+                  {% if value|float < 30 %}
+                    darker-red-cell
+                  {% elif value|float < 40 %}
+                    dark-cell
+                  {% elif value|float < 50 %}
+                    red-cell
+                  {% elif value|float < 65 %}
+                    lightred-cell
+                  {%else%}
+                    white-cell  
+                  {% endif %}
+                {% endif %}
+                ">
+                {{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>  
+<br/>
+{% endblock %}

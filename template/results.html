@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    #table-container {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two equal-width columns */
+        grid-template-rows: 1fr 1fr auto; /* Two rows with equal height and one row that adjusts to content */ /* Space between grid items */
+        width: 95%; /* Ensures the container spans the full width */
+        margin-left: 2.5%;
+        margin-right: 2.5%;
+        height: 700px;
+      }
+      
+      #container{
+        max-width: 100%;
+        max-height: 100%;
+      }
+      #cropyield {
+        grid-column: 1 / -1; /* Makes the canvas span the entire row */
+        height: 300px; /* Explicit height for the full-width canvas */
+      }
+</style>
+
+    <h3 style="margin-top: 8vh;">Explore graphs showing crop production, water usage, and precipitation for selected countries.</h3>
+    <form action="/results" method="POST" id="data-form">
+        <label for="dropdown">Choose a country:</label>
+        <select id="dropdown" name="dropdown">
+            {% for country in countries %}
+                <option value="{{ country }}" {% if country == selected_country %} selected {% endif %}>{{ country }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="table-container" style="margin-top: 20px;display: grid; grid-template-columns: repeat(2, 1fr);">
+        <div class="container">
+            <canvas id="Production"></canvas>
+        </div>
+        <div class="container">
+            <canvas id="percipitation"></canvas>
+        </div>
+        <div class="container">
+            <canvas id="land"></canvas>
+        </div>
+        <div class="container">
+            <canvas id="crop"></canvas></canvas>
+        </div>
+        <canvas id="cropyield"></canvas>
+    </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script type="text/javascript">
+            // Fetch data passed from the server
+            var production = {{ production|tojson }};
+            console.log(production);
+
+            const raindata = {{ rain | tojson }};
+            console.log(raindata);
+
+            const landdata = {{ land | tojson }};
+            console.log(landdata);
+
+            const cropdata = {{ crop | tojson }};
+            console.log(cropdata);
+
+            const cropyielddata = {{ crop_yield | tojson }};
+            console.log(cropyielddata);
+
+            // Prepare data for Chart.js
+            const labels = production.map(row => row['Corn Type']); // Extract Corn Type for labels
+            const productionValues = production.map(row => row['Production']); // Extract Production values
+
+            // Chart.js Configuration
+            const myChart1 = new Chart("Production", {
+                type: "bar",
+                data: {
+                    labels: labels, // X-axis labels
+                    datasets: [{
+                        label: 'Production (t)',
+                        data: productionValues, // Y-axis values
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            const years = raindata.map(item => item['Year']);
+            const precipitation = raindata.map(item => item['Annual Precipitation(mm)']);
+
+            const ctx2 = document.getElementById('percipitation').getContext('2d');
+        
+            const myChart2 = new Chart("percipitation", {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: 'Annual Precipitation (mm)',
+                    data: precipitation,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Precipitation (mm)'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Prepare chart labels and data based on the raw data
+        const landLabels = ["Water per Capita", "Agricultural Land (sq. km)"];
+        const landData = landdata.length > 0 ? [
+            landdata[0]["Water per Capita"] || 0,
+            landdata[0]["Agricultural land (sq. km)"] || 0
+        ] : [0, 0];
+
+        // Create the chart for land data
+        const landChart = new Chart("land", {
+            type: 'bar', // Specify the horizontal bar chart
+            data: {
+                labels: landLabels, // X-axis labels
+                datasets: [{
+                    label: `Land Data for {{ selected_country }}`,
+                    data: landData, // Y-axis values
+                    backgroundColor: ['rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
+                    borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Category'
+                        }
+                    }
+                }
+            }
+        });
+        // Create the chart for Fertilizer (kg/ha)
+        const ctx3 = document.getElementById('crop').getContext('2d');
+
+                // Prepare chart labels and data based on the raw data
+        const cropLabels = ["Fertilizer (kg/ha)", "Freshwater Withdrawal"];
+        const cropData = cropdata.length > 0 ? [
+            cropdata[0]["Fertilizer (kg/ha)"] || 0,
+            cropdata[0]["Freshwater Withdrawal"] || 0
+        ] : [0, 0];
+
+        const myChart3 = new Chart("crop", {
+            type: 'bar', // Horizontal bar chart
+            data: {
+                labels: cropLabels,
+                datasets: [{
+                    label: `Crop Data for {{ selected_country }}`,
+                    data: cropData,
+                    backgroundColor: ['rgba(54, 162, 235, 0.5)', 'rgba(255, 206, 86, 0.5)'],
+                    borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Category'
+                        }
+                    }
+                }
+            }
+        });
+
+const uniqueYears = [...new Set(cropyielddata.map(item => item['Year']))].sort(); // Unique sorted years (x-axis)
+
+// Function to align yield data to the unique years
+const alignDataToYears = (data, years) => {
+    const dataMap = Object.fromEntries(data.map(item => [item.year, item.yield])); // Map year to yield
+    return years.map(year => dataMap[year] || null); // Fill with null if year is missing
+};
+
+// Extract and align data for each corn type
+const cornType1Yield = alignDataToYears(
+    cropyielddata.filter(item => item['Corn Type'] === 'Maize (corn)').map(item => ({ year: item['Year'], yield: item['Yield (kg/ha)'] })),
+    uniqueYears
+);
+
+const cornType2Yield = alignDataToYears(
+    cropyielddata.filter(item => item['Corn Type'] === 'Rice').map(item => ({ year: item['Year'], yield: item['Yield (kg/ha)'] })),
+    uniqueYears
+);
+
+const cornType3Yield = alignDataToYears(
+    cropyielddata.filter(item => item['Corn Type'] === 'Wheat').map(item => ({ year: item['Year'], yield: item['Yield (kg/ha)'] })),
+    uniqueYears
+);
+
+// Create the chart
+const cropYieldChart = new Chart("cropyield", {
+    type: 'line',
+    data: {
+        labels: uniqueYears, // X-axis labels
+        datasets: [
+            {
+                label: 'Maize (corn) Yield',
+                data: cornType1Yield, // Y-axis data aligned with labels
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 2,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Rice Yield',
+                data: cornType2Yield, // Y-axis data aligned with labels
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderWidth: 2,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Wheat Yield',
+                data: cornType3Yield, // Y-axis data aligned with labels
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderWidth: 2,
+                yAxisID: 'y'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true, position: 'top' },
+            title: { display: true, text: 'Crop Yield for Different Crop Type' }
+        },
+        scales: {
+            x: {
+                title: { display: true, text: 'Year' }
+            },
+            y: {
+                title: { display: true, text: 'Yield (kg/ha)' },
+                beginAtZero: true
+            }
+        }
+    }
+});
+    </script>
+
+    {% endblock %}

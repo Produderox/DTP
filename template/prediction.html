@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container" style="border: 1px;">
+    <h3 style="margin-top: 12vh;text-align: center;">Crop Yield Prediction</h3>
+    <form action="/predict_result" method="POST" style="margin:1% 40% 5% 40%">
+        <label>Rainfall</label>
+        <br>
+        <!-- Add a name attribute -->
+        <input type="text" name="rainfall" id="Rainfall" placeholder="e.g., 120" required><br><br>        
+        
+        <label>Max Temperature</label><br>
+        <!-- Add a name attribute -->
+        <input type="text" name="max-temperature" id="temperature" placeholder="e.g., 37.8" required><br><br>
+
+        <label>Min Temperature</label><br>
+        <!-- Add a name attribute -->
+        <input type="text" name="min-temperature" id="temperature" placeholder="e.g., 37.8" required><br><br>
+        
+        <label>Crop Type</label><br>
+        <!-- Ensure the name attribute matches the variable you are retrieving in Flask -->
+        <select id="crop" name="crop" class="dropdown" style="width: 200px;">
+            {% for crop in croptype %}
+                <option value="{{ crop['Corn Type'] }}">{{ crop['Corn Type'] }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<script>
+    var crop = {{ croptype|tojson }};
+    console.log(crop);
+</script>
+{% endblock %}
